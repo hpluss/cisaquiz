@@ -1,0 +1,276 @@
+{% extends "base.html" %} {% block title %}Résultats du Quiz{% endblock %} {%
+block content %}
+<div class="results-container">
+  <div class="results-header">
+    <h1>Quiz Terminé !</h1>
+    <div class="score-circle">
+      <div class="score-value">{{ score|int }}%</div>
+      <div class="score-label">Score</div>
+    </div>
+  </div>
+
+  <div class="results-summary">
+    <p class="summary-text">
+      Vous avez répondu correctement à
+      <strong>{{ correct_count }}</strong> question(s) sur
+      <strong>{{ total_count }}</strong>
+    </p>
+  </div>
+
+  <!-- Résultats détaillés -->
+  <div class="results-detail">
+    <h2>Résultats détaillés</h2>
+
+    {% for result in results %}
+    <div
+      class="result-item {% if result.is_correct %}correct{% else %}incorrect{% endif %}"
+    >
+      <div class="result-header">
+        <span class="result-icon">
+          {% if result.is_correct %}✓{% else %}✗{% endif %}
+        </span>
+        <span class="result-theme">{{ result.theme }}</span>
+      </div>
+
+      <div class="result-question">
+        <p><strong>Question :</strong> {{ result.question }}</p>
+      </div>
+
+      <div class="result-answers">
+        <p>
+          <strong>Votre réponse :</strong>
+          <span class="user-answer">{{ result.user_answer }}</span>
+        </p>
+        {% if not result.is_correct %}
+        <p>
+          <strong>Réponse correcte :</strong>
+          <span class="correct-answer">{{ result.correct_answer }}</span>
+        </p>
+        {% endif %}
+      </div>
+
+      {% if result.explanation %}
+      <div class="result-explanation">
+        <p><strong>Explication :</strong></p>
+        <p>{{ result.explanation }}</p>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Actions -->
+  <div class="results-actions">
+    <a href="/quiz/config" class="btn btn-primary">Recommencer un Quiz</a>
+    <a href="/" class="btn btn-secondary">Retour à l'accueil</a>
+  </div>
+</div>
+
+<style>
+  .results-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .results-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .results-header h1 {
+    font-size: 36px;
+    color: #333;
+    margin-bottom: 20px;
+  }
+
+  .score-circle {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+  }
+
+  .score-value {
+    font-size: 48px;
+    font-weight: bold;
+  }
+
+  .score-label {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-top: 5px;
+  }
+
+  .results-summary {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+
+  .summary-text {
+    font-size: 18px;
+    color: #555;
+    margin: 0;
+  }
+
+  .results-detail {
+    margin-bottom: 40px;
+  }
+
+  .results-detail h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 24px;
+  }
+
+  .result-item {
+    background: white;
+    border-left: 4px solid #ddd;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .result-item.correct {
+    border-left-color: #28a745;
+    background: #f8fff9;
+  }
+
+  .result-item.incorrect {
+    border-left-color: #dc3545;
+    background: #fff8f8;
+  }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .result-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-weight: bold;
+    color: white;
+    font-size: 18px;
+  }
+
+  .result-item.correct .result-icon {
+    background: #28a745;
+  }
+
+  .result-item.incorrect .result-icon {
+    background: #dc3545;
+  }
+
+  .result-theme {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #e9ecef;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+  }
+
+  .result-question {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .result-question p {
+    margin: 0;
+    color: #333;
+  }
+
+  .result-answers {
+    margin-bottom: 15px;
+  }
+
+  .result-answers p {
+    margin: 8px 0;
+    color: #555;
+  }
+
+  .user-answer {
+    color: #dc3545;
+    font-weight: 600;
+  }
+
+  .correct-answer {
+    color: #28a745;
+    font-weight: 600;
+  }
+
+  .result-explanation {
+    padding: 12px;
+    background: #e7f3ff;
+    border-left: 3px solid #17a2b8;
+    border-radius: 4px;
+    margin-top: 10px;
+  }
+
+  .result-explanation p {
+    margin: 5px 0;
+    color: #555;
+  }
+
+  .result-explanation p:first-child {
+    margin-top: 0;
+  }
+
+  .results-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 40px;
+  }
+
+  .btn {
+    padding: 12px 30px;
+    border-radius: 4px;
+    text-decoration: none;
+    text-align: center;
+    font-size: 16px;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: #007bff;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #0056b3;
+  }
+
+  .btn-secondary {
+    background: #6c757d;
+    color: white;
+  }
+
+  .btn-secondary:hover {
+    background: #545b62;
+  }
+</style>
+{% endblock %}

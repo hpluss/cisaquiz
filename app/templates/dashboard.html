@@ -1,0 +1,665 @@
+{% extends "base.html" %} {% block title %}Dashboard - CISA Quiz{% endblock %}
+{% block content %}
+<a href="/" class="home-link">Accueil</a>
+<div class="dashboard-container">
+  <!-- En-tête avec statistiques principales -->
+  <div class="stats-header">
+    <div class="header-background"></div>
+
+    <div class="header-content">
+      <div class="stat-card main-stat">
+        <div class="stat-value">{{ overall_score | int }}%</div>
+        <div class="stat-label">Score Global</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-value">{{ correct_answers }}/{{ total_answers }}</div>
+        <div class="stat-label">Réponses Correctes</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-value">{{ incorrect_answers }}</div>
+        <div class="stat-label">Réponses Incorrectes</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-value">{{ total_sessions }}</div>
+        <div class="stat-label">Quiz</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section principale -->
+  <div class="dashboard-main">
+    <!-- Colonne gauche -->
+    <div class="dashboard-left">
+      <!-- Subject Insights -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Statistiques par Domaine</h3>
+          <div class="card-controls"></div>
+        </div>
+        <div class="card-body">
+          {% if theme_stats %}
+          <div class="theme-list">
+            {% for theme in theme_stats %}
+            <div class="theme-item">
+              <div class="theme-info">
+                <div class="theme-name">{{ theme.name }}</div>
+                <div class="theme-score">
+                  {{ theme.correct }}/{{ theme.total }}
+                </div>
+              </div>
+              <div class="theme-bar">
+                <div class="progress-bar">
+                  <div
+                    class="progress-fill"
+                    style="width: {{ theme.percentage }}%"
+                  ></div>
+                </div>
+                <div class="theme-percentage">
+                  {{ theme.percentage | int }}%
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty-state">Aucune donnée disponible</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Colonne droite -->
+    <div class="dashboard-right">
+      <!-- Study Activity -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Activité</h3>
+        </div>
+        <div class="card-body">
+          <div class="activity-list">
+            {% if session_history %} {% for session in session_history[:8] %}
+            <div class="activity-item">
+              <div class="activity-icon quiz-icon">📝</div>
+              <div class="activity-details">
+                <div class="activity-title">Quiz #{{ session.session_id }}</div>
+                <div class="activity-date">{{ session.date }}</div>
+              </div>
+              <div class="activity-status">
+                {% if session.correct == session.total %}
+                <span class="badge success">✓</span>
+                {% elif session.correct >= session.total * 0.7 %}
+                <span class="badge progress">{{ session.score | int }}%</span>
+                {% else %}
+                <span class="badge warning">{{ session.score | int }}%</span>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %} {% else %}
+            <div class="empty-state">Aucune activité</div>
+            {% endif %} {% if session_history|length > 8 %}
+            <div class="pagination">
+              <span class="page-info"
+                >1 - 8 de {{ session_history|length }} quiz</span
+              >
+              <button class="btn-next">→</button>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Study Progress -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Study Progress</h3>
+        </div>
+        <div class="card-body">
+          <div class="progress-card">
+            <div class="progress-left">
+              <div class="progress-count">
+                <h2>{{ total_answers }}/{{ total_questions_in_db }}</h2>
+              </div>
+              <div class="progress-percent">
+                {{ progression_percentage | int }}%
+              </div>
+            </div>
+            <div class="progress-right">
+              <div class="progress-bar large">
+                <div
+                  class="progress-fill"
+                  style="width: {{ progression_percentage }}%"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section CTA -->
+  <div class="cta-section">
+    <a href="/quiz/config" class="btn btn-primary btn-large">
+      Démarrer un Nouveau Quiz
+    </a>
+  </div>
+</div>
+
+<style>
+  .dashboard-container {
+    background: #f5f7fa;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  /* En-tête avec statistiques */
+  .stats-header {
+    position: relative;
+    background: linear-gradient(135deg, #3e5c76 0%, #4a5f7f 100%);
+    padding: 40px 20px;
+    margin-bottom: 30px;
+  }
+
+  .header-background {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 70%
+    );
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+
+  .home-link {
+    position: absolute;
+    top: 18px;
+    right: 24px;
+    color: rgba(255, 255, 255, 0.95);
+    text-decoration: none;
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.12);
+    padding: 8px 12px;
+    border-radius: 6px;
+  }
+
+  .home-link:hover {
+    background: rgba(0, 0, 0, 0.18);
+  }
+
+  .header-content {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+
+  .stat-card {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+  .stat-card.main-stat {
+    grid-column: 1;
+    background: linear-gradient(135deg, #f5b041 0%, #f8b739 100%);
+    color: white;
+  }
+
+  .stat-value {
+    font-size: 42px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .stat-card.main-stat .stat-value {
+    font-size: 56px;
+  }
+
+  .stat-label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .stat-card.main-stat .stat-label {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .stat-note {
+    font-size: 12px;
+    color: #999;
+  }
+
+  .stat-card.main-stat .stat-note {
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 10px;
+  }
+
+  /* Layout principal */
+  .dashboard-main {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    padding: 0 20px;
+    margin-bottom: 30px;
+  }
+
+  @media (max-width: 1024px) {
+    .dashboard-main {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Cartes */
+  .card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .card-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .card-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+  }
+
+  .card-controls,
+  .card-header .filter-link,
+  .card-header .reset-link {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .filter-badge {
+    font-size: 12px;
+    padding: 4px 10px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    color: #666;
+  }
+
+  .filter-link,
+  .reset-link {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 13px;
+  }
+
+  .filter-link:hover,
+  .reset-link:hover {
+    text-decoration: underline;
+  }
+
+  .card-body {
+    padding: 20px;
+  }
+
+  /* Domaines/Thèmes */
+  .theme-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .theme-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .theme-item:last-child {
+    border-bottom: none;
+  }
+
+  .theme-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .theme-name {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 4px;
+  }
+
+  .theme-score {
+    font-size: 12px;
+    color: #999;
+  }
+
+  .theme-bar {
+    flex: 2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 20px;
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f5b041 0%, #f8b739 100%);
+    transition: width 0.3s ease;
+  }
+
+  .theme-percentage {
+    min-width: 45px;
+    text-align: right;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+  }
+
+  /* Quiz Stats */
+  .quiz-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .stat-box {
+    text-align: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+  }
+
+  .stat-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: #333;
+  }
+
+  .stat-text {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+  }
+
+  /* Graphique */
+  .quiz-chart {
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .bar-chart {
+    width: 100%;
+    height: auto;
+  }
+
+  /* Activité d'étude */
+  .activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .activity-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+  }
+
+  .activity-icon {
+    font-size: 20px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+  }
+
+  .quiz-icon {
+    background: #e8f0fe;
+    color: #1967d2;
+  }
+
+  .activity-details {
+    flex: 1;
+  }
+
+  .activity-title {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 3px;
+  }
+
+  .activity-date {
+    font-size: 12px;
+    color: #999;
+  }
+
+  .activity-status {
+    display: flex;
+    align-items: center;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .badge.success {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .badge.progress {
+    background: #cfe2ff;
+    color: #084298;
+  }
+
+  .badge.warning {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    font-size: 12px;
+    color: #666;
+  }
+
+  .page-info {
+    flex: 1;
+  }
+
+  .btn-next {
+    background: none;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0;
+  }
+
+  .btn-next:hover {
+    color: #0056b3;
+  }
+
+  /* Progression */
+  .progress-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    text-align: center;
+  }
+
+  .progress-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+  }
+
+  .progress-label {
+    font-weight: 500;
+    color: #333;
+  }
+
+  .progress-percentage {
+    font-weight: 700;
+    color: #f5b041;
+    font-size: 18px;
+  }
+
+  .progress-bar.large {
+    height: 10px;
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 10px;
+  }
+
+  .progress-subtitle {
+    font-size: 12px;
+    color: #999;
+    margin-top: 8px;
+  }
+
+  /* New progress-card layout */
+  .progress-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .progress-left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 120px;
+  }
+
+  .progress-count {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .progress-percent {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1f2b35;
+  }
+
+  .progress-right {
+    flex: 1;
+  }
+
+  .progress-bar.large {
+    background: #e9ecef;
+    border-radius: 6px;
+    height: 12px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: #1f2b35;
+    transition: width 0.4s ease;
+  }
+
+  .reset-link {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 13px;
+  }
+
+  .reset-link:hover {
+    text-decoration: underline;
+  }
+
+  /* CTA */
+  .cta-section {
+    text-align: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: #007bff;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #0056b3;
+  }
+
+  .btn-large {
+    padding: 15px 50px;
+    font-size: 16px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 14px;
+  }
+</style>
+{% endblock %}
